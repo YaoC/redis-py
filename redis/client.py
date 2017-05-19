@@ -447,7 +447,7 @@ class StrictRedis(object):
             'CLUSTER SETSLOT': bool_ok,
             'CLUSTER SLAVES': parse_cluster_nodes,
             'GEOPOS': lambda r: list(map(lambda ll: (float(ll[0]),
-                                         float(ll[1])), r)),
+                                                     float(ll[1])), r)),
             'GEOHASH': lambda r: list(map(nativestr, r)),
             'GEORADIUS': parse_georadius_generic,
             'GEORADIUSBYMEMBER': parse_georadius_generic,
@@ -1632,9 +1632,15 @@ class StrictRedis(object):
         "Move ``value`` from set ``src`` to set ``dst`` atomically"
         return self.execute_command('SMOVE', src, dst, value)
 
-    def spop(self, name):
-        "Remove and return a random member of set ``name``"
-        return self.execute_command('SPOP', name)
+    def spop(self, name, number=None):
+        """
+        Remove and return a random member of set ``name``"    
+        If ``number`` is None, pops a random member of set ``name``.
+        If ``number`` is supplied, pops a list of ``number`` random
+        members of set ``name``.
+        """
+        args = number and [number] or []
+        return self.execute_command('SPOP', name, *args)
 
     def srandmember(self, name, number=None):
         """
@@ -2580,6 +2586,7 @@ class PubSub(object):
 
 
 class PubSubWorkerThread(threading.Thread):
+
     def __init__(self, pubsub, sleep_time, daemon=False):
         super(PubSubWorkerThread, self).__init__()
         self.daemon = daemon
